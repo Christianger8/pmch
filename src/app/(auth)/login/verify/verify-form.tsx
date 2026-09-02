@@ -5,6 +5,7 @@ import { useActionState, useState, useTransition } from "react";
 import { useFormStatus } from "react-dom";
 import { resendOtp, verifyOtp } from "@/features/auth/actions";
 import type { ActionState } from "@/features/auth/types";
+import type { OtpChannel } from "@/lib/validation/schemas";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 
@@ -17,7 +18,15 @@ function SubmitButton() {
   );
 }
 
-export function VerifyForm({ phone, next }: { phone: string; next: string }) {
+export function VerifyForm({
+  phone,
+  next,
+  channel,
+}: {
+  phone: string;
+  next: string;
+  channel: OtpChannel;
+}) {
   const [state, action] = useActionState<ActionState, FormData>(verifyOtp, {});
   const [resent, setResent] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -50,7 +59,7 @@ export function VerifyForm({ phone, next }: { phone: string; next: string }) {
           disabled={pending}
           onClick={() =>
             startTransition(async () => {
-              const r = await resendOtp(phone);
+              const r = await resendOtp(phone, channel);
               setResent(r.error ?? "Codigo reenviado");
             })
           }

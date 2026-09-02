@@ -10,6 +10,10 @@ export const phoneSchema = z
 
 export const otpSchema = z.string().trim().regex(/^\d{4,8}$/, "El codigo tiene entre 4 y 8 digitos");
 
+/** Canal por el que se envia el codigo de verificacion. */
+export const otpChannelSchema = z.enum(["whatsapp", "sms"]);
+export type OtpChannel = z.infer<typeof otpChannelSchema>;
+
 export const onboardingSchema = z.object({
   full_name: z.string().trim().min(2, "Ingresa tu nombre").max(80),
 });

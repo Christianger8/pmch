@@ -4,22 +4,37 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { normalizePhone } from "@/lib/format";
-import { onboardingSchema, otpSchema, phoneSchema } from "@/lib/validation/schemas";
+import {
+  onboardingSchema,
+  otpChannelSchema,
+  otpSchema,
+  phoneSchema,
+  type OtpChannel,
+} from "@/lib/validation/schemas";
+import { env } from "@/lib/env";
 import type { ActionState } from "./types";
 
-/** Paso 1: enviar el codigo OTP por SMS. */
+function resolveChannel(value: FormDataEntryValue | null): OtpChannel {
+  const parsed = otpChannelSchema.safeParse(value);
+  return parsed.success ? parsed.data : env.defaultOtpChannel;
+}
+
+/** Paso 1: enviar el codigo OTP por WhatsApp o SMS. */
 export async function requestOtp(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const parsed = phoneSchema.safeParse(formData.get("phone"));
   if (!parsed.success) return { error: "Ingresa un numero de celular valido" };
 
   const phone = normalizePhone(parsed.data);
+  const channel = resolveChannel(formData.get("channel"));
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithOtp({ phone });
+  const { error } = await supabase.auth.signInWithOtp({ phone, options: { channel } });
 
   if (error) return { error: traducirError(error.message) };
 
   const next = (formData.get("next") as string) || "/";
-  redirect(`/login/verify?phone=${encodeURIComponent(phone)}&next=${encodeURIComponent(next)}`);
+  redirect(
+    `/login/verify?phone=${encodeURIComponent(phone)}&next=${encodeURIComponent(next)}&channel=${channel}`,
+  );
 }
 
 /** Paso 2: verificar el codigo. */
@@ -44,9 +59,12 @@ export async function verifyOtp(_prev: ActionState, formData: FormData): Promise
   redirect(next);
 }
 
-export async function resendOtp(phone: string): Promise<ActionState> {
+export async function resendOtp(phone: string, channel?: OtpChannel): Promise<ActionState> {
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithOtp({ phone });
+  const { error } = await supabase.auth.signInWithOtp({
+    phone,
+    options: { channel: channel ?? env.defaultOtpChannel },
+  });
   if (error) return { error: traducirError(error.message) };
   return { ok: true };
 }

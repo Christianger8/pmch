@@ -43,7 +43,8 @@ solo para mostrar/ocultar botones.
 
 ## Autenticación y autorización
 
-- **Auth:** Supabase Auth con OTP por SMS (sin usuario/contraseña). El trigger
+- **Auth:** Supabase Auth con OTP por WhatsApp o SMS (sin usuario/contraseña); el
+  canal por defecto lo fija `NEXT_PUBLIC_DEFAULT_OTP_CHANNEL`. El trigger
   `handle_new_user` crea el `profile`. El onboarding sólo pide el nombre.
 - **Sesión:** cookies vía `@supabase/ssr`. El `middleware.ts` refresca la sesión
   en cada request y hace el *guard* de rutas (`/login`, `/onboarding`, `/admin`).

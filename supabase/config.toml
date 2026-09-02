@@ -32,8 +32,9 @@ enable_signup = true
 enable_confirmations = true
 template = "Tu codigo de PadelMatch es {{ .Code }}"
 
-# Para desarrollo local: no manda SMS reales, el codigo aparece en `supabase status`
-# y en Inbucket. En produccion se configura un proveedor (Twilio) desde el dashboard.
+# WhatsApp como canal del OTP solo funciona con el proveedor Twilio o Twilio Verify
+# (se configura desde el dashboard en produccion, con un remitente de WhatsApp
+# aprobado). En local se prueba con el canal "sms" y estos OTP de test:
 [auth.sms.test_otp]
 "5491100000000" = "123456"
 

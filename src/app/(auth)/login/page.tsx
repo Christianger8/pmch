@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/features/auth/session";
+import { env } from "@/lib/env";
 import { LoginForm } from "./login-form";
 
 export const metadata = { title: "Ingresar" };
@@ -25,10 +26,10 @@ export default async function LoginPage({
         </div>
         <h1 className="text-2xl font-bold">PadelMatch</h1>
         <p className="mt-1 text-sm text-neutral-500">
-          Ingresa con tu celular. Te enviamos un codigo por SMS.
+          Ingresa con tu celular. Te enviamos un codigo por WhatsApp o SMS.
         </p>
       </div>
-      <LoginForm next={next ?? "/"} />
+      <LoginForm next={next ?? "/"} defaultChannel={env.defaultOtpChannel} />
     </div>
   );
 }

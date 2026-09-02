@@ -23,19 +23,48 @@ Arquitectura objetivo: **Vercel** (frontend Next.js) + **Supabase Cloud**
 4. Habilitar extensiones en **Database → Extensions**: `pg_cron`, `pg_net`
    (y `pgcrypto`, normalmente ya activa).
 
-## 2. Autenticación por SMS
+## 2. Autenticación por WhatsApp / SMS
+
+El ingreso es por código OTP. La app deja al usuario elegir **WhatsApp** o **SMS**
+en la pantalla de login; el canal por defecto lo define
+`NEXT_PUBLIC_DEFAULT_OTP_CHANNEL` (`whatsapp` recomendado).
+
+### 2.1 Base (SMS)
 
 1. **Authentication → Providers → Phone**: activar.
-2. Elegir un proveedor de SMS y cargar sus credenciales:
-   - **Twilio** (Verify o Messaging Service), **MessageBird**, **Vonage** o **Textlocal**.
-   - Para Argentina, Twilio con un *Messaging Service* o *Verify Service* funciona bien.
-3. **Authentication → URL Configuration**:
-   - `Site URL`: `https://TUDOMINIO`
-   - `Redirect URLs`: `https://TUDOMINIO`
-4. Ajustar el template del SMS (opcional) y el rate limit.
+2. Elegir proveedor y cargar credenciales:
+   - **Twilio Verify** (recomendado — maneja plantillas, reintentos y varios
+     canales), **Twilio** *Messaging Service*, **MessageBird**, **Vonage** o **Textlocal**.
+   - Para Argentina, **Twilio Verify** funciona bien.
+3. Ajustar `OTP expiry` (subilo a 600 s para gastar menos mensajes) y el rate limit.
 
-> Costo: cada login consume un SMS. Considerá subir el `OTP expiry` a 600 s y
-> limitar reintentos.
+### 2.2 Canal WhatsApp
+
+> WhatsApp **solo** funciona con el proveedor **Twilio** o **Twilio Verify**.
+
+1. En **Twilio → Messaging → Senders → WhatsApp senders**, dar de alta un
+   remitente de WhatsApp. Requiere una **cuenta de Meta Business verificada** y un
+   número que **no** esté usado en la app normal de WhatsApp. La aprobación de
+   Meta suele tardar **algunos días**.
+2. Con **Twilio Verify**: en el *Verify Service* habilitar el canal **WhatsApp**
+   (la plantilla de "autenticación" la gestiona Twilio). Con **Twilio** a secas:
+   crear y hacer aprobar una plantilla de categoría *authentication*.
+3. En Supabase, el proveedor Phone debe ser el mismo Twilio/Twilio Verify.
+4. La app ya envía `channel: "whatsapp"` cuando corresponde; no hay cambios de código.
+5. **Mientras el remitente de WhatsApp no esté aprobado**, poné
+   `NEXT_PUBLIC_DEFAULT_OTP_CHANNEL=sms` y lanzá con SMS; cambialo a `whatsapp`
+   cuando esté listo (no requiere redeploy de la base, solo la env var + redeploy
+   en Vercel).
+
+### 2.3 URLs
+
+**Authentication → URL Configuration**:
+- `Site URL`: `https://TUDOMINIO`
+- `Redirect URLs`: `https://TUDOMINIO`
+
+> Costo: cada login consume un mensaje (WhatsApp o SMS), unos centavos de USD.
+> Twilio Verify agrega una tarifa por verificación. Subí el `OTP expiry` para
+> reducir reenvíos.
 
 ## 3. Variables de entorno
 
@@ -45,6 +74,7 @@ para desarrollo):
 | Variable | Valor |
 |---|---|
 | `NEXT_PUBLIC_APP_URL` | `https://TUDOMINIO` |
+| `NEXT_PUBLIC_DEFAULT_OTP_CHANNEL` | `whatsapp` (o `sms` hasta aprobar el remitente) |
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://<ref>.supabase.co` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | *(Settings → API)* |
 | `SUPABASE_SERVICE_ROLE_KEY` | *(Settings → API — secreto)* |
@@ -130,7 +160,7 @@ el flujo sin gastar SMS.
 
 ## 8. Checklist post-deploy
 
-- [ ] Login con SMS real funciona en el dominio final
+- [ ] Login funciona en el dominio final por el canal elegido (WhatsApp y/o SMS)
 - [ ] `NEXT_PUBLIC_APP_URL` = dominio final; link de WhatsApp abre el partido
 - [ ] `.ics` se descarga y abre en Google/Apple Calendar
 - [ ] Realtime: al anotarse en un dispositivo, el otro actualiza el contador

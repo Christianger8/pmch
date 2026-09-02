@@ -5,7 +5,7 @@ partidos y los jugadores se anotan hasta completar el cupo, todo desde el celula
 en pocos segundos.
 
 - **Frontend:** Next.js 15 (App Router) · React 19 · TypeScript · Tailwind CSS · modo oscuro
-- **Backend:** Supabase (Auth por OTP SMS · PostgreSQL · RLS · Realtime · Edge Functions)
+- **Backend:** Supabase (Auth por OTP en WhatsApp o SMS · PostgreSQL · RLS · Realtime · Edge Functions)
 - **PWA:** instalable en Android / iPhone / desktop, con service worker y push
 - **Arquitectura:** dominio puro (`src/core`) + capa de features (`src/features`) + UI (`src/app`, `src/components`)
 
@@ -13,7 +13,7 @@ en pocos segundos.
 
 | Jugador | Administrador |
 |---|---|
-| Registro e inicio de sesión por celular (OTP SMS) | Alta/edición/baja de complejos |
+| Registro e inicio de sesión por celular (OTP WhatsApp / SMS) | Alta/edición/baja de complejos |
 | Ver y filtrar partidos disponibles | Alta/edición y activar/desactivar canchas |
 | Anotarse / cancelar inscripción | Crear/editar/cancelar/finalizar partidos |
 | Lista de espera automática | Ver inscriptos y quitar jugadores |
@@ -56,6 +56,10 @@ El seed crea un **admin** con teléfono `+54 9 11 0000 0000`. En local el OTP de
 ese número es `123456` (definido en `supabase/config.toml`). Cualquier otro
 número recibe el código por el buzón de Inbucket (`http://localhost:54324`).
 
+> En local usá el canal **SMS** en la pantalla de login
+> (`NEXT_PUBLIC_DEFAULT_OTP_CHANNEL=sms`): WhatsApp requiere un remitente real de
+> Twilio. Ver `docs/DEPLOYMENT.md` §2.2.
+
 ## Scripts
 
 | Script | Descripción |
@@ -94,7 +98,7 @@ supabase/
 ## Despliegue
 
 Ver **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** para el paso a paso completo
-(Supabase en la nube + Vercel + tu dominio + proveedor de SMS + recordatorios).
+(Supabase en la nube + Vercel + tu dominio + Twilio para WhatsApp/SMS + recordatorios).
 
 ## Arquitectura y decisiones
 
