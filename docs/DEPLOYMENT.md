@@ -99,6 +99,23 @@ para desarrollo):
 5. Actualizar `NEXT_PUBLIC_APP_URL` en Vercel al dominio final y **redeploy**
    (afecta los links de WhatsApp, los `.ics` y el `start_url` de la PWA).
 
+#### Si el dominio está en DonWeb (hosting compartido)
+
+El hosting compartido de DonWeb **no corre la app** (es para PHP/archivos, no
+Node + PostgreSQL). Se usa solo para el dominio y, si querés, el correo. La app
+vive en Vercel + Supabase.
+
+1. Panel de DonWeb → **Dominios → tu dominio → Zona DNS** (o *Editor de zona DNS*).
+2. Editar / crear:
+   - Registro **A**, host `@` (o vacío), valor `76.76.21.21`.
+   - Registro **CNAME**, host `www`, valor `cname.vercel-dns.com`.
+   - Si DonWeb no deja un CNAME en la raíz, usá el registro A de arriba para `@`.
+3. **No toques** los registros **MX** ni los `TXT` de correo si usás el mail de
+   DonWeb: esos quedan como están y el correo sigue funcionando.
+4. Los cambios de DNS tardan de minutos a unas horas en propagar.
+5. En Vercel, el dominio pasa de "Invalid Configuration" a "Valid" solo cuando la
+   propagación termina; recién ahí emite el certificado SSL.
+
 ## 5. Recordatorios (Edge Function + cron)
 
 1. Deploy de la función:
