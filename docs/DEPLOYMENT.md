@@ -1,0 +1,139 @@
+# Despliegue en producción
+
+Arquitectura objetivo: **Vercel** (frontend Next.js) + **Supabase Cloud**
+(base, auth, realtime, edge functions) + **tu dominio**.
+
+---
+
+## 1. Proyecto en Supabase
+
+1. Crear un proyecto en <https://supabase.com/dashboard>.
+2. Instalar la CLI y enlazar:
+   ```bash
+   npm i -g supabase
+   supabase login
+   supabase link --project-ref <PROJECT_REF>
+   ```
+3. Aplicar el esquema:
+   ```bash
+   supabase db push          # corre supabase/migrations/*
+   ```
+   > El `seed.sql` **no** se aplica en producción. Creá tu primer admin a mano
+   > (paso 6).
+4. Habilitar extensiones en **Database → Extensions**: `pg_cron`, `pg_net`
+   (y `pgcrypto`, normalmente ya activa).
+
+## 2. Autenticación por SMS
+
+1. **Authentication → Providers → Phone**: activar.
+2. Elegir un proveedor de SMS y cargar sus credenciales:
+   - **Twilio** (Verify o Messaging Service), **MessageBird**, **Vonage** o **Textlocal**.
+   - Para Argentina, Twilio con un *Messaging Service* o *Verify Service* funciona bien.
+3. **Authentication → URL Configuration**:
+   - `Site URL`: `https://TUDOMINIO`
+   - `Redirect URLs`: `https://TUDOMINIO`
+4. Ajustar el template del SMS (opcional) y el rate limit.
+
+> Costo: cada login consume un SMS. Considerá subir el `OTP expiry` a 600 s y
+> limitar reintentos.
+
+## 3. Variables de entorno
+
+En **Vercel → Project → Settings → Environment Variables** (y en tu `.env.local`
+para desarrollo):
+
+| Variable | Valor |
+|---|---|
+| `NEXT_PUBLIC_APP_URL` | `https://TUDOMINIO` |
+| `NEXT_PUBLIC_SUPABASE_URL` | `https://<ref>.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | *(Settings → API)* |
+| `SUPABASE_SERVICE_ROLE_KEY` | *(Settings → API — secreto)* |
+
+## 4. Deploy del frontend en Vercel
+
+1. Importar el repositorio en Vercel. Framework: **Next.js** (autodetectado).
+2. Build command: `npm run build` · Install: `npm install`.
+3. Agregar el script de íconos al build si querés PNGs frescos:
+   `Build Command → npm run icons && npm run build`.
+4. Deploy.
+
+### Dominio propio
+
+1. **Vercel → Settings → Domains → Add** → `TUDOMINIO`.
+2. En tu proveedor DNS:
+   - `A  @  76.76.21.21`  **o**  `CNAME  @  cname.vercel-dns.com` (según el proveedor)
+   - `CNAME  www  cname.vercel-dns.com`
+3. Esperar la emisión del certificado (automática).
+4. Volver a Supabase → **URL Configuration** y confirmar que `Site URL` y
+   `Redirect URLs` usan el dominio final (sin barra final).
+5. Actualizar `NEXT_PUBLIC_APP_URL` en Vercel al dominio final y **redeploy**
+   (afecta los links de WhatsApp, los `.ics` y el `start_url` de la PWA).
+
+## 5. Recordatorios (Edge Function + cron)
+
+1. Deploy de la función:
+   ```bash
+   supabase functions deploy reminders
+   ```
+2. Secrets de la función:
+   ```bash
+   supabase secrets set \
+     REMINDERS_CRON_SECRET="<string-largo-aleatorio>" \
+     NOTIFY_PROVIDER=twilio \
+     TWILIO_ACCOUNT_SID=... \
+     TWILIO_AUTH_TOKEN=... \
+     TWILIO_SMS_FROM="+1..." \
+     TWILIO_WHATSAPP_FROM="whatsapp:+14155238886"
+   ```
+   > `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` ya están disponibles para la
+   > función automáticamente.
+3. Configurar los GUC que usa el cron (SQL Editor):
+   ```sql
+   alter database postgres set app.settings.reminders_function_url =
+     'https://<PROJECT_REF>.functions.supabase.co/reminders';
+   alter database postgres set app.settings.reminders_cron_secret =
+     '<el mismo REMINDERS_CRON_SECRET>';
+   ```
+4. La migración `20260101000300_cron.sql` ya programó el job `padel-reminders`
+   cada 15 min. Verificar:
+   ```sql
+   select * from cron.job;
+   select * from cron.job_run_details order by start_time desc limit 10;
+   ```
+
+Sin proveedor configurado (`NOTIFY_PROVIDER=log`) los recordatorios se generan y
+se marcan como enviados escribiendo en los logs de la función — útil para probar
+el flujo sin gastar SMS.
+
+## 6. Crear el primer administrador
+
+1. Iniciá sesión en la app con tu celular (quedás como `player`).
+2. En Supabase **SQL Editor**:
+   ```sql
+   update public.profiles set role = 'admin'
+   where phone = '+549XXXXXXXXXX';
+   ```
+3. Recargá la app: aparece la pestaña **Admin**.
+4. Para administradores por complejo (sin ser admin global):
+   ```sql
+   insert into public.complex_admins (complex_id, user_id)
+   values ('<complex_id>', '<user_id>');
+   ```
+
+## 7. PWA
+
+- El manifiesto se sirve en `/manifest.webmanifest` y el service worker en
+  `/sw.js` (solo se registra en producción).
+- Antes del deploy, generá los PNG: `npm run icons` (crea `icon-192`,
+  `icon-512`, `maskable-512`, `apple-touch-icon`, `favicon.ico`).
+- Verificá con Lighthouse → *Installable*.
+
+## 8. Checklist post-deploy
+
+- [ ] Login con SMS real funciona en el dominio final
+- [ ] `NEXT_PUBLIC_APP_URL` = dominio final; link de WhatsApp abre el partido
+- [ ] `.ics` se descarga y abre en Google/Apple Calendar
+- [ ] Realtime: al anotarse en un dispositivo, el otro actualiza el contador
+- [ ] `cron.job` tiene `padel-reminders` y `job_run_details` no muestra errores
+- [ ] Lighthouse PWA installable en verde
+- [ ] RLS: un usuario no-admin no puede entrar a `/admin` ni mutar catálogo

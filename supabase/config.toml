@@ -1,0 +1,44 @@
+project_id = "padel-match"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+
+[inbucket]
+enabled = true
+port = 54324
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000"]
+jwt_expiry = 3600
+enable_signup = true
+
+[auth.sms]
+enable_signup = true
+enable_confirmations = true
+template = "Tu codigo de PadelMatch es {{ .Code }}"
+
+# Para desarrollo local: no manda SMS reales, el codigo aparece en `supabase status`
+# y en Inbucket. En produccion se configura un proveedor (Twilio) desde el dashboard.
+[auth.sms.test_otp]
+"5491100000000" = "123456"
+
+[edge_runtime]
+enabled = true
+
+[functions.reminders]
+verify_jwt = false

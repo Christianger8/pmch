@@ -1,0 +1,95 @@
+"use server";
+
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import { createClient } from "@/lib/supabase/server";
+import { normalizePhone } from "@/lib/format";
+import { onboardingSchema, otpSchema, phoneSchema } from "@/lib/validation/schemas";
+
+export interface ActionState {
+  error?: string;
+  ok?: boolean;
+}
+
+/** Paso 1: enviar el codigo OTP por SMS. */
+export async function requestOtp(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const parsed = phoneSchema.safeParse(formData.get("phone"));
+  if (!parsed.success) return { error: "Ingresa un numero de celular valido" };
+
+  const phone = normalizePhone(parsed.data);
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithOtp({ phone });
+
+  if (error) return { error: traducirError(error.message) };
+
+  const next = (formData.get("next") as string) || "/";
+  redirect(`/login/verify?phone=${encodeURIComponent(phone)}&next=${encodeURIComponent(next)}`);
+}
+
+/** Paso 2: verificar el codigo. */
+export async function verifyOtp(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const token = otpSchema.safeParse(formData.get("token"));
+  const phoneRaw = formData.get("phone");
+  if (!token.success || typeof phoneRaw !== "string") {
+    return { error: "Codigo invalido" };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.verifyOtp({
+    phone: phoneRaw,
+    token: token.data,
+    type: "sms",
+  });
+
+  if (error) return { error: traducirError(error.message) };
+
+  const next = (formData.get("next") as string) || "/";
+  revalidatePath("/", "layout");
+  redirect(next);
+}
+
+export async function resendOtp(phone: string): Promise<ActionState> {
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithOtp({ phone });
+  if (error) return { error: traducirError(error.message) };
+  return { ok: true };
+}
+
+/** Completar el nombre en el primer ingreso. */
+export async function completeOnboarding(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const parsed = onboardingSchema.safeParse({ full_name: formData.get("full_name") });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Datos invalidos" };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ full_name: parsed.data.full_name, onboarded: true })
+    .eq("id", user.id);
+
+  if (error) return { error: "No pudimos guardar tus datos. Reintenta." };
+
+  revalidatePath("/", "layout");
+  redirect("/");
+}
+
+export async function signOut(): Promise<void> {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  redirect("/login");
+}
+
+function traducirError(message: string): string {
+  const m = message.toLowerCase();
+  if (m.includes("invalid") && m.includes("token")) return "El codigo es incorrecto o expiro";
+  if (m.includes("rate limit") || m.includes("too many")) return "Demasiados intentos. Espera unos minutos.";
+  if (m.includes("expired")) return "El codigo expiro. Pedi uno nuevo.";
+  return "No pudimos completar la operacion. Reintenta.";
+}
