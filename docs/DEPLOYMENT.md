@@ -103,18 +103,32 @@ para desarrollo):
 
 El hosting compartido de DonWeb **no corre la app** (es para PHP/archivos, no
 Node + PostgreSQL). Se usa solo para el dominio y, si querés, el correo. La app
-vive en Vercel + Supabase.
+vive en Vercel + Supabase. Apuntar el DNS a Vercel **no mueve el hosting**: la web
+y el correo que ya tenés siguen igual; solo se agrega/edita un registro.
 
-1. Panel de DonWeb → **Dominios → tu dominio → Zona DNS** (o *Editor de zona DNS*).
-2. Editar / crear:
+**Opción recomendada — un subdominio** (deja intacta la web actual del dominio raíz):
+
+1. **Vercel → Settings → Domains → Add** → `app.TUDOMINIO` (el nombre que quieras:
+   `app`, `padel`, `turnos`, `reservas`…). Vercel muestra el destino, del tipo
+   `cname.vercel-dns.com`.
+2. DonWeb → **Dominios → tu dominio → Zona DNS** → agregar:
+   - Tipo **CNAME**, host `app`, valor `cname.vercel-dns.com` (el que dé Vercel).
+3. `NEXT_PUBLIC_APP_URL = https://app.TUDOMINIO` en Vercel, y el mismo valor en
+   Supabase → *Site URL* y *Redirect URLs*.
+
+**Opción — el dominio raíz** (si el dominio no tiene una web que quieras conservar):
+
+1. En Vercel agregar `TUDOMINIO` y `www.TUDOMINIO`.
+2. En la Zona DNS:
    - Registro **A**, host `@` (o vacío), valor `76.76.21.21`.
    - Registro **CNAME**, host `www`, valor `cname.vercel-dns.com`.
-   - Si DonWeb no deja un CNAME en la raíz, usá el registro A de arriba para `@`.
-3. **No toques** los registros **MX** ni los `TXT` de correo si usás el mail de
-   DonWeb: esos quedan como están y el correo sigue funcionando.
-4. Los cambios de DNS tardan de minutos a unas horas en propagar.
-5. En Vercel, el dominio pasa de "Invalid Configuration" a "Valid" solo cuando la
-   propagación termina; recién ahí emite el certificado SSL.
+   - Si DonWeb no permite CNAME en la raíz, alcanza con el registro A para `@`.
+
+En ambos casos:
+- **No toques** los registros **MX** ni los `TXT` de correo: el mail sigue funcionando.
+- El DNS tarda de minutos a unas horas en propagar.
+- En Vercel el dominio pasa de "Invalid Configuration" a "Valid" al terminar la
+  propagación; recién ahí se emite el certificado SSL.
 
 ## 5. Recordatorios (Edge Function + cron)
 
