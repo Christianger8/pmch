@@ -72,18 +72,32 @@ $$;
 -- ---------------------------------------------------------------------------
 -- Sustituir <PROJECT_REF> y <REMINDERS_CRON_SECRET> al aplicar en produccion,
 -- o setear estos valores como GUC del proyecto (ver docs/DEPLOYMENT.md).
-select cron.schedule(
-  'padel-reminders',
-  '*/15 * * * *',
-  $$
-  select public.enqueue_due_reminders();
-  select net.http_post(
-    url     := current_setting('app.settings.reminders_function_url', true),
+create or replace function public.run_reminders_tick()
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  fn_url text := current_setting('app.settings.reminders_function_url', true);
+  secret text := current_setting('app.settings.reminders_cron_secret', true);
+begin
+  perform public.enqueue_due_reminders();
+
+  if fn_url is null or secret is null then
+    raise notice 'run_reminders_tick: faltan app.settings.reminders_function_url / reminders_cron_secret';
+    return;
+  end if;
+
+  perform net.http_post(
+    url     := fn_url,
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
-      'Authorization', 'Bearer ' || current_setting('app.settings.reminders_cron_secret', true)
+      'Authorization', 'Bearer ' || secret
     ),
     body    := '{}'::jsonb
   );
-  $$
-);
+end;
+$$;
+
+select cron.schedule('padel-reminders', '*/15 * * * *', $$select public.run_reminders_tick();$$);

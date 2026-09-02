@@ -2,7 +2,8 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import { saveComplex, type FormResult } from "@/features/admin/actions";
+import { saveComplex } from "@/features/admin/actions";
+import type { FormResult } from "@/features/admin/types";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/field";
 import type { Complex } from "@/lib/supabase/database.types";

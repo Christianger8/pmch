@@ -2,7 +2,8 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import { saveCourt, type FormResult } from "@/features/admin/actions";
+import { saveCourt } from "@/features/admin/actions";
+import type { FormResult } from "@/features/admin/types";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import type { Court } from "@/lib/supabase/database.types";

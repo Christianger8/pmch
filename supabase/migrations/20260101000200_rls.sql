@@ -11,8 +11,8 @@
 -- ============================================================================
 
 -- Las vistas aplican RLS de las tablas subyacentes (PG15+).
-alter view public.match_details set (security_invoker = on);
-alter view public.player_history set (security_invoker = on);
+alter view public.match_details set (security_invoker = true);
+alter view public.player_history set (security_invoker = true);
 
 alter table public.profiles          enable row level security;
 alter table public.complexes         enable row level security;

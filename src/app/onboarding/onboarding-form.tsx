@@ -2,7 +2,8 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import { completeOnboarding, type ActionState } from "@/features/auth/actions";
+import { completeOnboarding } from "@/features/auth/actions";
+import type { ActionState } from "@/features/auth/types";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 

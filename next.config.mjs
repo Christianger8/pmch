@@ -2,6 +2,8 @@
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // El lint se corre aparte (`npm run lint`); no bloquea el deploy.
+  eslint: { ignoreDuringBuilds: true },
   async headers() {
     return [
       {

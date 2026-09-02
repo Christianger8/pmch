@@ -11,12 +11,7 @@ import {
   matchSchema,
   removePlayerSchema,
 } from "@/lib/validation/schemas";
-
-export interface FormResult {
-  ok?: boolean;
-  error?: string;
-  fieldErrors?: Record<string, string>;
-}
+import type { FormResult } from "./types";
 
 function zodToFieldErrors(issues: readonly { path: PropertyKey[]; message: string }[]) {
   const out: Record<string, string> = {};

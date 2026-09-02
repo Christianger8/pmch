@@ -184,6 +184,7 @@ set search_path = public
 as $$
 declare
   uid uuid := auth.uid();
+  m record;
   reg record;
   promoted record;
 begin
@@ -191,19 +192,24 @@ begin
     raise exception 'AUTH_REQUIRED';
   end if;
 
-  select * into reg from public.matches where id = target_match for update;
+  select * into m from public.matches where id = target_match for update;
   if not found then
     raise exception 'MATCH_NOT_FOUND';
   end if;
 
-  update public.registrations
-  set status = 'cancelled', cancelled_at = now(), position = null
+  -- Estado ANTES de cancelar (para saber si se libera un lugar confirmado).
+  select * into reg
+  from public.registrations
   where match_id = target_match and user_id = uid and status <> 'cancelled'
-  returning * into reg;
+  for update;
 
   if not found then
     return; -- no estaba inscripto, no-op
   end if;
+
+  update public.registrations
+  set status = 'cancelled', cancelled_at = now(), position = null
+  where id = reg.id;
 
   -- Si se libero un lugar confirmado, promover al primero en espera.
   if reg.status = 'confirmed' then
@@ -251,14 +257,18 @@ begin
     raise exception 'FORBIDDEN';
   end if;
 
-  update public.registrations
-  set status = 'cancelled', cancelled_at = now(), position = null
+  select * into reg
+  from public.registrations
   where match_id = target_match and user_id = target_user and status <> 'cancelled'
-  returning * into reg;
+  for update;
 
   if not found then
     return;
   end if;
+
+  update public.registrations
+  set status = 'cancelled', cancelled_at = now(), position = null
+  where id = reg.id;
 
   insert into public.notifications (user_id, match_id, type, channel, title, body)
   values (target_user, target_match, 'removed_by_admin', 'push',

@@ -4,12 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/features/auth/session";
 import { matchIdSchema } from "@/lib/validation/schemas";
-
-export interface MatchActionResult {
-  ok: boolean;
-  status?: "confirmed" | "waitlist";
-  error?: string;
-}
+import type { MatchActionResult } from "./types";
 
 const RPC_ERRORS: Record<string, string> = {
   AUTH_REQUIRED: "Necesitas iniciar sesion",

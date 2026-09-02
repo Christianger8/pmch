@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useActionState, useState, useTransition } from "react";
 import { useFormStatus } from "react-dom";
-import { resendOtp, verifyOtp, type ActionState } from "@/features/auth/actions";
+import { resendOtp, verifyOtp } from "@/features/auth/actions";
+import type { ActionState } from "@/features/auth/types";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 

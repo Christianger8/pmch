@@ -5,11 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { normalizePhone } from "@/lib/format";
 import { onboardingSchema, otpSchema, phoneSchema } from "@/lib/validation/schemas";
-
-export interface ActionState {
-  error?: string;
-  ok?: boolean;
-}
+import type { ActionState } from "./types";
 
 /** Paso 1: enviar el codigo OTP por SMS. */
 export async function requestOtp(_prev: ActionState, formData: FormData): Promise<ActionState> {
