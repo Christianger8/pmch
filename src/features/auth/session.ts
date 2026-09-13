@@ -23,7 +23,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     .single();
 
   if (!profile) return null;
-  return { id: user.id, phone: user.phone ?? null, profile };
+  return { id: user.id, phone: user.phone ?? null, profile: profile as Profile };
 }
 
 /** Igual que getSessionUser pero redirige a /login si no hay sesion. */

@@ -45,11 +45,13 @@ export async function saveComplex(id: string | null, _prev: FormResult, formData
     status: parsed.data.status,
   };
 
-  const { error } = id
-    ? await supabase.from("complexes").update(payload).eq("id", id)
-    : await supabase.from("complexes").insert(payload);
-
-  if (error) return { error: "No se pudo guardar el complejo" };
+  if (id) {
+    const { error } = await supabase.from("complexes").update(payload).eq("id", id);
+    if (error) return { error: "No se pudo guardar el complejo" };
+  } else {
+    const { error } = await supabase.from("complexes").insert(payload);
+    if (error) return { error: "No se pudo guardar el complejo" };
+  }
 
   revalidatePath("/admin/complexes");
   redirect("/admin/complexes");
@@ -87,11 +89,13 @@ export async function saveCourt(id: string | null, _prev: FormResult, formData: 
     notes: parsed.data.notes || null,
   };
 
-  const { error } = id
-    ? await supabase.from("courts").update(payload).eq("id", id)
-    : await supabase.from("courts").insert(payload);
-
-  if (error) return { error: "No se pudo guardar la cancha" };
+  if (id) {
+    const { error } = await supabase.from("courts").update(payload).eq("id", id);
+    if (error) return { error: "No se pudo guardar la cancha" };
+  } else {
+    const { error } = await supabase.from("courts").insert(payload);
+    if (error) return { error: "No se pudo guardar la cancha" };
+  }
 
   revalidatePath("/admin/courts");
   redirect("/admin/courts");
@@ -140,11 +144,13 @@ export async function saveMatch(id: string | null, _prev: FormResult, formData: 
     comments: parsed.data.comments || null,
   };
 
-  const { error } = id
-    ? await supabase.from("matches").update(payload).eq("id", id)
-    : await supabase.from("matches").insert(payload);
-
-  if (error) return { error: "No se pudo guardar el partido" };
+  if (id) {
+    const { error } = await supabase.from("matches").update(payload).eq("id", id);
+    if (error) return { error: "No se pudo guardar el partido" };
+  } else {
+    const { error } = await supabase.from("matches").insert(payload);
+    if (error) return { error: "No se pudo guardar el partido" };
+  }
 
   revalidatePath("/admin/matches");
   revalidatePath("/");
