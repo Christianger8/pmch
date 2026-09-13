@@ -130,7 +130,7 @@ export async function completeOnboarding(
 
   const { error } = await supabase
     .from("profiles")
-    .update({ full_name: parsed.data.full_name, onboarded: true })
+    .update({ full_name: parsed.data.full_name, onboarded: true } as any)
     .eq("id", user.id);
 
   if (error) return { error: "No pudimos guardar tus datos. Reintenta." };

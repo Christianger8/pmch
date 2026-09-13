@@ -46,8 +46,8 @@ export async function saveComplex(id: string | null, _prev: FormResult, formData
   };
 
   const { error } = id
-    ? await supabase.from("complexes").update(payload).eq("id", id)
-    : await supabase.from("complexes").insert(payload);
+    ? await supabase.from("complexes").update(payload as any).eq("id", id)
+    : await supabase.from("complexes").insert(payload as any);
 
   if (error) return { error: "No se pudo guardar el complejo" };
 
@@ -88,8 +88,8 @@ export async function saveCourt(id: string | null, _prev: FormResult, formData: 
   };
 
   const { error } = id
-    ? await supabase.from("courts").update(payload).eq("id", id)
-    : await supabase.from("courts").insert(payload);
+    ? await supabase.from("courts").update(payload as any).eq("id", id)
+    : await supabase.from("courts").insert(payload as any);
 
   if (error) return { error: "No se pudo guardar la cancha" };
 
@@ -100,7 +100,7 @@ export async function saveCourt(id: string | null, _prev: FormResult, formData: 
 export async function setCourtStatus(id: string, status: "active" | "inactive"): Promise<FormResult> {
   await requireAdmin();
   const supabase = await createClient();
-  const { error } = await supabase.from("courts").update({ status }).eq("id", id);
+  const { error } = await supabase.from("courts").update({ status } as any).eq("id", id);
   if (error) return { error: "No se pudo actualizar la cancha" };
   revalidatePath("/admin/courts");
   return { ok: true };
@@ -141,8 +141,8 @@ export async function saveMatch(id: string | null, _prev: FormResult, formData: 
   };
 
   const { error } = id
-    ? await supabase.from("matches").update(payload).eq("id", id)
-    : await supabase.from("matches").insert(payload);
+    ? await supabase.from("matches").update(payload as any).eq("id", id)
+    : await supabase.from("matches").insert(payload as any);
 
   if (error) return { error: "No se pudo guardar el partido" };
 
