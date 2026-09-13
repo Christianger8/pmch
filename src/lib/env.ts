@@ -7,6 +7,15 @@ function required(name: string, value: string | undefined): string {
   if (!value || value.trim().length === 0) {
     throw new Error(`Falta la variable de entorno ${name}. Copiala de .env.example`);
   }
+  // Si el panel de hosting mostraba el valor "tapado" y se copio asi (ej.
+  // "eyJhbGci••••"), el error real de fetch/headers es criptico. Lo
+  // detectamos ac fallando con un mensaje claro.
+  if (/[•●∙]/.test(value)) {
+    throw new Error(
+      `${name} tiene caracteres de "valor oculto" (•). Volve a pegar el valor real ` +
+        `(revelalo antes de copiar) en la configuracion del hosting.`,
+    );
+  }
   return value;
 }
 
