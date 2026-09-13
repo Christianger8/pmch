@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/features/auth/session";
 import { env } from "@/lib/env";
@@ -30,6 +31,12 @@ export default async function LoginPage({
         </p>
       </div>
       <LoginForm next={next ?? "/"} defaultChannel={env.defaultOtpChannel} />
+
+      <p className="mt-6 text-center text-xs text-neutral-400">
+        <Link href="/login/admin" className="underline">
+          Sos administrador y todavia no hay WhatsApp/SMS configurado? Ingresa por email
+        </Link>
+      </p>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { normalizePhone } from "@/lib/format";
 import {
+  emailSchema,
   onboardingSchema,
   otpChannelSchema,
   otpSchema,
@@ -65,6 +66,50 @@ export async function resendOtp(phone: string, channel?: OtpChannel): Promise<Ac
     phone,
     options: { channel: channel ?? env.defaultOtpChannel },
   });
+  if (error) return { error: traducirError(error.message) };
+  return { ok: true };
+}
+
+/**
+ * Ingreso alternativo por email, solo pensado para administradores mientras
+ * no hay un proveedor de WhatsApp/SMS configurado. Usa el envio de correo
+ * propio de Supabase (sin Twilio ni ningun proveedor externo).
+ */
+export async function requestAdminOtp(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const parsed = emailSchema.safeParse(formData.get("email"));
+  if (!parsed.success) return { error: "Ingresa un email valido" };
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithOtp({ email: parsed.data });
+
+  if (error) return { error: traducirError(error.message) };
+
+  redirect(`/login/admin/verify?email=${encodeURIComponent(parsed.data)}`);
+}
+
+export async function verifyAdminOtp(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const token = otpSchema.safeParse(formData.get("token"));
+  const emailRaw = formData.get("email");
+  if (!token.success || typeof emailRaw !== "string") {
+    return { error: "Codigo invalido" };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.verifyOtp({
+    email: emailRaw,
+    token: token.data,
+    type: "email",
+  });
+
+  if (error) return { error: traducirError(error.message) };
+
+  revalidatePath("/", "layout");
+  redirect("/");
+}
+
+export async function resendAdminOtp(email: string): Promise<ActionState> {
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithOtp({ email });
   if (error) return { error: traducirError(error.message) };
   return { ok: true };
 }

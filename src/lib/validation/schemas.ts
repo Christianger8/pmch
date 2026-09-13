@@ -10,6 +10,9 @@ export const phoneSchema = z
 
 export const otpSchema = z.string().trim().regex(/^\d{4,8}$/, "El codigo tiene entre 4 y 8 digitos");
 
+/** Ingreso alternativo por email (solo administradores, sin proveedor de SMS/WhatsApp). */
+export const emailSchema = z.string().trim().toLowerCase().email("Ingresa un email valido");
+
 /** Canal por el que se envia el codigo de verificacion. */
 export const otpChannelSchema = z.enum(["whatsapp", "sms"]);
 export type OtpChannel = z.infer<typeof otpChannelSchema>;
