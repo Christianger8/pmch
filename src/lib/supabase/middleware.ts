@@ -3,7 +3,7 @@ import { createServerClient } from "@supabase/ssr";
 import { env } from "@/lib/env";
 import type { Database } from "./database.types";
 
-const PUBLIC_PATHS = ["/login", "/auth", "/manifest.webmanifest", "/sw.js", "/offline"];
+const PUBLIC_PATHS = ["/login", "/auth", "/manifest.webmanifest", "/sw.js", "/offline", "/api/debug"];
 const ADMIN_PREFIX = "/admin";
 
 /**
