@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/features/auth/session";
 import { env } from "@/lib/env";
+import { ButtonLink } from "@/components/ui/button";
 import { LoginForm } from "./login-form";
 
 export const metadata = { title: "Ingresar" };
@@ -32,10 +32,17 @@ export default async function LoginPage({
       </div>
       <LoginForm next={next ?? "/"} defaultChannel={env.defaultOtpChannel} />
 
-      <p className="mt-6 text-center text-xs text-neutral-400">
-        <Link href="/login/admin" className="underline">
-          Sos administrador y todavia no hay WhatsApp/SMS configurado? Ingresa por email
-        </Link>
+      <div className="my-6 flex items-center gap-3 text-xs font-medium uppercase tracking-wide text-neutral-400">
+        <span className="h-px flex-1 bg-neutral-200 dark:bg-neutral-800" />
+        o
+        <span className="h-px flex-1 bg-neutral-200 dark:bg-neutral-800" />
+      </div>
+
+      <ButtonLink href="/login/admin" variant="outline" size="lg">
+        Ingresar como administrador
+      </ButtonLink>
+      <p className="mt-2 text-center text-xs text-neutral-400">
+        Por email, mientras no haya WhatsApp/SMS configurado
       </p>
     </div>
   );
