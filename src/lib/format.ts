@@ -51,18 +51,15 @@ function capitalize(s: string): string {
 }
 
 /**
- * Normaliza un telefono ingresado a formato E.164 aproximado para Argentina.
- * Acepta "+5491122334455", "11 2233-4455", "0111533334444", etc.
- * No valida operador; solo limpia y antepone el prefijo pais.
+ * Arma el E.164 de un celular argentino a partir de SOLO el codigo de area +
+ * numero (lo unico que pide el formulario de login: el "+54 9" va fijo en la
+ * UI). Acepta "11 2233-4455", "0291 6493400", "291-15-649-3400", etc.
  */
-export function normalizePhone(input: string, defaultCountry = "54"): string {
-  let digits = input.replace(/[^\d+]/g, "");
-  if (digits.startsWith("+")) return digits;
-  digits = digits.replace(/\D/g, "");
-  digits = digits.replace(/^0/, "");
-  digits = digits.replace(/^(\d{2,4})15/, "$1"); // saca el "15" de celular
-  if (!digits.startsWith(defaultCountry)) digits = defaultCountry + digits;
-  return "+" + digits;
+export function argMobileToE164(localNumber: string): string {
+  let digits = localNumber.replace(/\D/g, "");
+  digits = digits.replace(/^0/, ""); // codigo de area con 0 inicial (ej. "011")
+  digits = digits.replace(/^(\d{2,4})15/, "$1"); // "15" de celular antiguo
+  return `+549${digits}`;
 }
 
 export function isValidPhone(e164: string): boolean {

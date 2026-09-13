@@ -6,7 +6,7 @@ import { requestOtp } from "@/features/auth/actions";
 import type { ActionState } from "@/features/auth/types";
 import type { OtpChannel } from "@/lib/validation/schemas";
 import { Button } from "@/components/ui/button";
-import { Field, Input } from "@/components/ui/field";
+import { Field } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
 
 function SubmitButton({ channel }: { channel: OtpChannel }) {
@@ -28,16 +28,26 @@ export function LoginForm({ next, defaultChannel }: { next: string; defaultChann
       <input type="hidden" name="next" value={next} />
       <input type="hidden" name="channel" value={channel} />
 
-      <Field label="Numero de celular" error={state.error} hint="Ej: 11 2233 4455">
-        <Input
-          name="phone"
-          type="tel"
-          inputMode="tel"
-          autoComplete="tel"
-          placeholder="+54 9 11 2233 4455"
-          required
-          autoFocus
-        />
+      <Field
+        label="Numero de celular"
+        error={state.error}
+        hint="Codigo de area + numero, sin el 0 ni el 15"
+      >
+        <div className="flex h-12 items-center rounded-xl border border-neutral-300 bg-white pl-3 pr-1 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-200 dark:border-neutral-700 dark:bg-neutral-900 dark:focus-within:ring-brand-900">
+          <span className="shrink-0 select-none text-[15px] font-medium text-neutral-500 dark:text-neutral-400">
+            +54 9
+          </span>
+          <input
+            name="phone"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            placeholder="11 2233 4455"
+            required
+            autoFocus
+            className="h-full w-full bg-transparent px-2 text-[15px] outline-none placeholder:text-neutral-400"
+          />
+        </div>
       </Field>
 
       <div>

@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { normalizePhone } from "@/lib/format";
+import { argMobileToE164 } from "@/lib/format";
 import {
   emailSchema,
   onboardingSchema,
@@ -25,7 +25,7 @@ export async function requestOtp(_prev: ActionState, formData: FormData): Promis
   const parsed = phoneSchema.safeParse(formData.get("phone"));
   if (!parsed.success) return { error: "Ingresa un numero de celular valido" };
 
-  const phone = normalizePhone(parsed.data);
+  const phone = argMobileToE164(parsed.data);
   const channel = resolveChannel(formData.get("channel"));
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithOtp({ phone, options: { channel } });
