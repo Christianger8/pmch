@@ -130,6 +130,29 @@ En ambos casos:
 - En Vercel el dominio pasa de "Invalid Configuration" a "Valid" al terminar la
   propagación; recién ahí se emite el certificado SSL.
 
+#### Opción — una ruta del dominio raíz (ej. `TUDOMINIO/padelmatch`)
+
+Esta es la configuración **actual** de este deploy (`cher.com.ar/padelmatch`).
+A diferencia de un subdominio, acá **todo el dominio pasa a apuntar a Vercel**
+(no solo una parte): lo que hoy responde en `TUDOMINIO/` deja de verse ahí. Se
+eligió porque en `cher.com.ar` solo había una instalación de WordPress sin
+contenido real todavía.
+
+1. `next.config.mjs` tiene `basePath: "/padelmatch"`. Si el path cambia, hay
+   que actualizarlo ahí y en los 4 lugares que lo repiten a mano porque no
+   pasan por el router de Next (Next no les agrega el prefijo solo):
+   `public/sw.js`, `src/components/pwa-register.tsx`,
+   `src/app/manifest.webmanifest/route.ts`, `src/app/layout.tsx` (campos
+   `manifest` e `icons.apple`).
+2. En Vercel: agregar `TUDOMINIO` (y `www.TUDOMINIO` si se quiere) como
+   dominio del proyecto, igual que en la opción del dominio raíz de arriba.
+3. En la Zona DNS de DonWeb: registro **A** en `@` → `76.76.21.21` (más
+   **CNAME** `www` → `cname.vercel-dns.com` si aplica). No tocar MX/TXT.
+4. `NEXT_PUBLIC_APP_URL = https://TUDOMINIO/padelmatch` (con el path
+   incluido) en Vercel.
+5. La raíz (`TUDOMINIO/`) redirige sola a `/padelmatch` (ver `redirects()`
+   en `next.config.mjs`) hasta que se arme un sitio propio ahí.
+
 ## 5. Recordatorios (Edge Function + cron)
 
 1. Deploy de la función:

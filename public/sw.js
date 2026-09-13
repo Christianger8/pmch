@@ -6,13 +6,18 @@
  * No cachea llamadas a Supabase ni /api.
  */
 const VERSION = "v1";
+// La app vive bajo /padelmatch (next.config.mjs -> basePath). El service
+// worker no pasa por el router de Next, asi que las rutas van a mano.
+const BASE_PATH = "/padelmatch";
 const STATIC_CACHE = `pm-static-${VERSION}`;
 const RUNTIME_CACHE = `pm-runtime-${VERSION}`;
-const OFFLINE_URL = "/offline";
+const OFFLINE_URL = `${BASE_PATH}/offline`;
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => cache.addAll([OFFLINE_URL, "/manifest.webmanifest"])),
+    caches
+      .open(STATIC_CACHE)
+      .then((cache) => cache.addAll([OFFLINE_URL, `${BASE_PATH}/manifest.webmanifest`])),
   );
   self.skipWaiting();
 });
@@ -57,7 +62,10 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (url.pathname.startsWith("/_next/static") || url.pathname.startsWith("/icons/")) {
+  if (
+    url.pathname.startsWith(`${BASE_PATH}/_next/static`) ||
+    url.pathname.startsWith(`${BASE_PATH}/icons/`)
+  ) {
     event.respondWith(
       caches.match(request).then(
         (cached) =>
@@ -98,16 +106,16 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(payload.title || "PadelMatch", {
       body: payload.body || "",
-      icon: "/icons/icon-192.png",
-      badge: "/icons/icon-192.png",
-      data: { url: payload.url || "/" },
+      icon: `${BASE_PATH}/icons/icon-192.png`,
+      badge: `${BASE_PATH}/icons/icon-192.png`,
+      data: { url: payload.url || BASE_PATH },
     }),
   );
 });
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const target = event.notification.data?.url || "/";
+  const target = event.notification.data?.url || BASE_PATH;
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {

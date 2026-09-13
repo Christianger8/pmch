@@ -15,14 +15,15 @@ export const metadata: Metadata = {
     template: "%s · PadelMatch",
   },
   description: "Publica partidos de padel y completa los cuatro jugadores en segundos.",
-  manifest: "/manifest.webmanifest",
+  // Next no antepone basePath a estos dos campos automaticamente.
+  manifest: "/padelmatch/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "PadelMatch",
   },
   icons: {
-    apple: "/icons/apple-touch-icon.png",
+    apple: "/padelmatch/icons/apple-touch-icon.png",
   },
 };
 

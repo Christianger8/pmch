@@ -9,7 +9,8 @@ export function PwaRegister() {
     if (process.env.NODE_ENV !== "production") return;
 
     const onLoad = () => {
-      navigator.serviceWorker.register("/sw.js").catch(() => {
+      // La app vive bajo /padelmatch (ver next.config.mjs -> basePath).
+      navigator.serviceWorker.register("/padelmatch/sw.js", { scope: "/padelmatch/" }).catch(() => {
         /* silencioso: la app funciona igual sin SW */
       });
     };
