@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/features/auth/session";
 import { localArgToUtcISO } from "@/lib/time";
-import { argMobileToE164 } from "@/lib/format";
+import { argMobileToE164, toAuthPhone } from "@/lib/format";
 import { derivePlayerPassword } from "@/lib/player-auth";
 import {
   complexSchema,
@@ -46,7 +46,11 @@ export async function createPlayer(_prev: FormResult, formData: FormData): Promi
   const admin = createAdminClient();
 
   const { data: created, error: createError } = await admin.auth.admin.createUser({
-    phone,
+    // Supabase persiste el celular sin el "+" (ver toAuthPhone). La
+    // contrasena se deriva siempre de la version con "+" (mas abajo, en
+    // loginRegisteredPlayer, se usa la misma) para que no dependa de este
+    // detalle interno de Supabase.
+    phone: toAuthPhone(phone),
     phone_confirm: true,
     // Permite el login sin OTP mientras no hay WhatsApp/SMS conectado.
     // Ver src/lib/player-auth.ts.

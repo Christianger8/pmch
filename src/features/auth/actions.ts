@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { argMobileToE164 } from "@/lib/format";
+import { argMobileToE164, toAuthPhone } from "@/lib/format";
 import { derivePlayerPassword } from "@/lib/player-auth";
 import {
   emailSchema,
@@ -26,7 +26,9 @@ export async function checkPhone(localNumber: string): Promise<PhoneCheckResult>
 
   const phone = argMobileToE164(parsed.data);
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("phone_is_registered", { check_phone: phone });
+  const { data, error } = await supabase.rpc("phone_is_registered", {
+    check_phone: toAuthPhone(phone),
+  });
 
   if (error) return { ok: false, error: "No pudimos verificar el numero. Reintenta." };
   return { ok: true, phone, registered: Boolean(data) };
@@ -40,7 +42,7 @@ export async function checkPhone(localNumber: string): Promise<PhoneCheckResult>
 export async function loginRegisteredPlayer(phone: string, next: string): Promise<ActionState> {
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({
-    phone,
+    phone: toAuthPhone(phone),
     password: derivePlayerPassword(phone),
   });
 
@@ -59,7 +61,10 @@ export async function sendOtp(
   next: string,
 ): Promise<ActionState> {
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithOtp({ phone, options: { channel } });
+  const { error } = await supabase.auth.signInWithOtp({
+    phone: toAuthPhone(phone),
+    options: { channel },
+  });
 
   if (error) return { error: traducirError(error.message) };
 
@@ -78,7 +83,7 @@ export async function verifyOtp(_prev: ActionState, formData: FormData): Promise
 
   const supabase = await createClient();
   const { error } = await supabase.auth.verifyOtp({
-    phone: phoneRaw,
+    phone: toAuthPhone(phoneRaw),
     token: token.data,
     type: "sms",
   });
@@ -93,7 +98,7 @@ export async function verifyOtp(_prev: ActionState, formData: FormData): Promise
 export async function resendOtp(phone: string, channel?: OtpChannel): Promise<ActionState> {
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithOtp({
-    phone,
+    phone: toAuthPhone(phone),
     options: { channel: channel ?? env.defaultOtpChannel },
   });
   if (error) return { error: traducirError(error.message) };

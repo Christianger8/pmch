@@ -3,6 +3,7 @@ import { deletePlayer } from "@/features/admin/actions";
 import { Card } from "@/components/ui/card";
 import { ConfirmButton } from "@/components/ui/confirm-button";
 import { PlayerForm } from "@/features/admin/components/player-form";
+import { displayPhone } from "@/lib/format";
 
 export const metadata = { title: "Jugadores" };
 
@@ -35,7 +36,7 @@ export default async function AdminPlayersPage() {
               <li key={p.id} className="flex items-center justify-between py-2.5">
                 <div>
                   <p className="text-sm font-medium">{p.full_name ?? "Sin nombre"}</p>
-                  <p className="text-xs text-neutral-400">{p.phone}</p>
+                  <p className="text-xs text-neutral-400">{displayPhone(p.phone)}</p>
                 </div>
                 <ConfirmButton
                   action={deletePlayer.bind(null, p.id)}

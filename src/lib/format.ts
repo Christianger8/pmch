@@ -65,3 +65,22 @@ export function argMobileToE164(localNumber: string): string {
 export function isValidPhone(e164: string): boolean {
   return /^\+\d{10,15}$/.test(e164);
 }
+
+/**
+ * Supabase guarda el celular SIN el signo "+" en auth.users.phone (tanto el
+ * Admin API como el login por OTP lo normalizan asi al persistirlo), aunque
+ * se lo pasemos con "+". Usar esta version para CUALQUIER llamada a
+ * supabase.auth.* o al Admin API (createUser, signInWithPassword,
+ * signInWithOtp, verifyOtp) y para comparar contra profiles.phone. La
+ * version con "+" (argMobileToE164) sigue siendo la que se muestra al
+ * usuario y la que identifica al jugador en el resto de la app.
+ */
+export function toAuthPhone(e164: string): string {
+  return e164.replace(/^\+/, "");
+}
+
+/** Para mostrar un celular guardado en la base (sin "+") de forma legible. */
+export function displayPhone(phone: string | null): string {
+  if (!phone) return "-";
+  return phone.startsWith("+") ? phone : `+${phone}`;
+}
