@@ -8,9 +8,11 @@ import {
 } from "@/features/matches/queries";
 import { Card } from "@/components/ui/card";
 import { MatchStatusBadge } from "@/components/ui/badge";
+import { ButtonLink } from "@/components/ui/button";
 import { JoinButton } from "@/features/matches/components/join-button";
 import { ShareButtons } from "@/features/matches/components/share-buttons";
 import { AddToCalendar } from "@/features/matches/components/add-to-calendar";
+import { MatchStatusActions } from "@/features/matches/components/match-status-actions";
 import { RealtimeRefresh } from "@/features/matches/components/realtime-refresh";
 import { formatDate, formatDuration, formatTime } from "@/lib/format";
 import { resolveActionState, spotsLeft, statusLabel } from "@/core/domain/match";
@@ -43,6 +45,9 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
   const confirmed = players.filter((p) => p.registration.status === "confirmed");
   const waitlist = players.filter((p) => p.registration.status === "waitlist");
   const isRegistered = relation !== "none";
+  const canManage =
+    (match.created_by === user.id || user.profile.role === "admin") &&
+    (match.status === "open" || match.status === "full");
 
   return (
     <div className="space-y-4">
@@ -77,6 +82,18 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
         <p className="mt-3 text-sm font-semibold text-brand-600 dark:text-brand-400">
           {statusLabel(match.status)}
         </p>
+
+        {canManage && (
+          <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-neutral-100 pt-3 dark:border-neutral-800">
+            <span className="text-xs text-neutral-400">
+              {match.created_by === user.id ? "Sos el organizador" : "Sos admin"}
+            </span>
+            <ButtonLink href={`/matches/${id}/edit`} variant="secondary" size="sm">
+              Editar
+            </ButtonLink>
+            <MatchStatusActions matchId={id} status={match.status} />
+          </div>
+        )}
       </Card>
 
       <div className="space-y-2">

@@ -4,26 +4,11 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/features/auth/session";
-import { localArgToUtcISO } from "@/lib/time";
 import { argMobileToE164, displayPhone, toAuthPhone } from "@/lib/format";
 import { derivePlayerPassword } from "@/lib/player-auth";
-import {
-  complexSchema,
-  courtSchema,
-  matchSchema,
-  playerSchema,
-  removePlayerSchema,
-} from "@/lib/validation/schemas";
+import { zodToFieldErrors } from "@/lib/zod-errors";
+import { complexSchema, courtSchema, playerSchema, removePlayerSchema } from "@/lib/validation/schemas";
 import type { FormResult } from "./types";
-
-function zodToFieldErrors(issues: readonly { path: PropertyKey[]; message: string }[]) {
-  const out: Record<string, string> = {};
-  for (const i of issues) {
-    const key = i.path.length ? String(i.path[0]) : "_";
-    if (!out[key]) out[key] = i.message;
-  }
-  return out;
-}
 
 // ---------------------------------------------------------------------------
 // Jugadores (carga manual)
@@ -197,71 +182,9 @@ export async function setCourtStatus(id: string, status: "active" | "inactive"):
 // ---------------------------------------------------------------------------
 // Partidos
 // ---------------------------------------------------------------------------
-export async function saveMatch(id: string | null, _prev: FormResult, formData: FormData): Promise<FormResult> {
-  await requireAdmin();
-  const parsed = matchSchema.safeParse({
-    complex_id: formData.get("complex_id"),
-    court_id: formData.get("court_id"),
-    starts_at_date: formData.get("starts_at_date"),
-    starts_at_time: formData.get("starts_at_time"),
-    duration_minutes: formData.get("duration_minutes"),
-    max_players: formData.get("max_players"),
-    category: formData.get("category") ?? "",
-    comments: formData.get("comments") ?? "",
-  });
-  if (!parsed.success) return { fieldErrors: zodToFieldErrors(parsed.error.issues) };
-
-  let startsAt: string;
-  try {
-    startsAt = localArgToUtcISO(`${parsed.data.starts_at_date}T${parsed.data.starts_at_time}`);
-  } catch {
-    return { fieldErrors: { starts_at_date: "Fecha y hora invalidas" } };
-  }
-
-  const supabase = await createClient();
-  const payload = {
-    complex_id: parsed.data.complex_id,
-    court_id: parsed.data.court_id,
-    starts_at: startsAt,
-    duration_minutes: parsed.data.duration_minutes,
-    max_players: parsed.data.max_players,
-    category: parsed.data.category || null,
-    comments: parsed.data.comments || null,
-  };
-
-  if (id) {
-    const { error } = await supabase.from("matches").update(payload).eq("id", id);
-    if (error) return { error: "No se pudo guardar el partido" };
-  } else {
-    const { error } = await supabase.from("matches").insert(payload);
-    if (error) return { error: "No se pudo guardar el partido" };
-  }
-
-  revalidatePath("/admin/matches");
-  revalidatePath("/");
-  redirect("/admin/matches");
-}
-
-export async function cancelMatch(id: string): Promise<FormResult> {
-  await requireAdmin();
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("cancel_match", { target_match: id });
-  if (error) return { error: "No se pudo cancelar el partido" };
-  revalidatePath("/admin/matches");
-  revalidatePath(`/admin/matches/${id}`);
-  revalidatePath("/");
-  return { ok: true };
-}
-
-export async function finishMatch(id: string): Promise<FormResult> {
-  await requireAdmin();
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("finish_match", { target_match: id });
-  if (error) return { error: "No se pudo finalizar el partido" };
-  revalidatePath("/admin/matches");
-  revalidatePath(`/admin/matches/${id}`);
-  return { ok: true };
-}
+// saveMatch/cancelMatch/finishMatch se mudaron a @/features/matches/actions:
+// desde que los jugadores tambien pueden organizar partidos (no solo el
+// admin), ya no son acciones exclusivas de este feature.
 
 export async function removePlayer(matchId: string, userId: string): Promise<FormResult> {
   await requireAdmin();

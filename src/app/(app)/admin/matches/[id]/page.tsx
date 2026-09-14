@@ -4,10 +4,8 @@ import { getMatch, getMatchPlayers } from "@/features/matches/queries";
 import { Card } from "@/components/ui/card";
 import { Badge, MatchStatusBadge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
-import {
-  MatchAdminActions,
-  RemovePlayerButton,
-} from "@/features/admin/components/match-admin-actions";
+import { RemovePlayerButton } from "@/features/admin/components/match-admin-actions";
+import { MatchStatusActions } from "@/features/matches/components/match-status-actions";
 import { RealtimeRefresh } from "@/features/matches/components/realtime-refresh";
 import { formatDate, formatDuration, formatTime } from "@/lib/format";
 
@@ -58,7 +56,7 @@ export default async function AdminMatchDetailPage({
               Editar
             </ButtonLink>
           )}
-          <MatchAdminActions matchId={id} status={match.status} />
+          <MatchStatusActions matchId={id} status={match.status} />
         </div>
       </Card>
 

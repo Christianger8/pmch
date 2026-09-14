@@ -1,5 +1,5 @@
 import { listComplexes, listCourts } from "@/features/admin/queries";
-import { MatchForm } from "@/features/admin/components/match-form";
+import { MatchForm } from "@/features/matches/components/match-form";
 import { ButtonLink } from "@/components/ui/button";
 
 export const metadata = { title: "Nuevo partido" };

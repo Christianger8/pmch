@@ -4,6 +4,7 @@ import { listComplexes } from "@/features/admin/queries";
 import { MatchCard } from "@/features/matches/components/match-card";
 import { MatchFilters } from "@/features/matches/components/filters";
 import { RealtimeRefresh } from "@/features/matches/components/realtime-refresh";
+import { ButtonLink } from "@/components/ui/button";
 
 export const metadata = { title: "Partidos disponibles" };
 
@@ -30,9 +31,14 @@ export default async function MatchesPage({
   return (
     <div className="space-y-4">
       <RealtimeRefresh />
-      <div>
-        <h1 className="text-xl font-bold">Partidos disponibles</h1>
-        <p className="text-sm text-neutral-500">Elegi uno y anotate.</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold">Partidos disponibles</h1>
+          <p className="text-sm text-neutral-500">Elegi uno y anotate.</p>
+        </div>
+        <ButtonLink href="/matches/new" size="sm" className="shrink-0">
+          + Organizar
+        </ButtonLink>
       </div>
 
       <MatchFilters
