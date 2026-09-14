@@ -80,7 +80,12 @@ export async function requestAdminOtp(_prev: ActionState, formData: FormData): P
   if (!parsed.success) return { error: "Ingresa un email valido" };
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithOtp({ email: parsed.data });
+  const { error } = await supabase.auth.signInWithOtp({
+    email: parsed.data,
+    // Si tocan el link del email en vez de tipear el codigo, que la sesion
+    // se complete de verdad (antes no habia ninguna ruta que lo recibiera).
+    options: { emailRedirectTo: `${env.appUrl}/auth/confirm` },
+  });
 
   if (error) return { error: traducirError(error.message) };
 
@@ -109,7 +114,10 @@ export async function verifyAdminOtp(_prev: ActionState, formData: FormData): Pr
 
 export async function resendAdminOtp(email: string): Promise<ActionState> {
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithOtp({ email });
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: `${env.appUrl}/auth/confirm` },
+  });
   if (error) return { error: traducirError(error.message) };
   return { ok: true };
 }
