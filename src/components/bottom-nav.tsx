@@ -25,7 +25,7 @@ export function BottomNav({ isAdmin }: { isAdmin: boolean }) {
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-neutral-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur dark:border-neutral-800 dark:bg-neutral-950/95">
-      <div className="mx-auto flex max-w-lg items-stretch justify-around">
+      <div className="nav-inner flex items-stretch justify-around">
         {items.map((item) => {
           const active = item.match(pathname);
           return (

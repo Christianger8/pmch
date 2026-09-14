@@ -12,7 +12,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div>
       <header className="safe-top sticky top-0 z-30 border-b border-neutral-200 bg-neutral-50/90 backdrop-blur dark:border-neutral-800 dark:bg-neutral-950/90">
-        <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
+        <div className="header-inner flex items-center justify-between px-4 py-3">
           <Link href="/" className="flex items-center gap-2 font-bold">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white">P</span>
             PadelMatch

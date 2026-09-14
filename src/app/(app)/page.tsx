@@ -47,7 +47,7 @@ export default async function MatchesPage({
           No hay partidos con estos filtros.
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
           {matches.map((m) => {
             const rel = relByMatch.get(m.id);
             return (

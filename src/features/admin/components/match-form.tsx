@@ -39,6 +39,18 @@ export function MatchForm({
   const fe = state.fieldErrors ?? {};
 
   const [complexId, setComplexId] = useState(match?.complex_id ?? complexes[0]?.id ?? "");
+
+  const defaultLocal = match ? utcISOToLocalArg(match.starts_at) : "";
+  const [defaultDate, defaultTime] = defaultLocal ? defaultLocal.split("T") : ["", ""];
+  const timeOptions = useMemo(() => {
+    const options: string[] = [];
+    for (let minutes = 0; minutes < 24 * 60; minutes += 30) {
+      const hh = String(Math.floor(minutes / 60)).padStart(2, "0");
+      const mm = String(minutes % 60).padStart(2, "0");
+      options.push(`${hh}:${mm}`);
+    }
+    return options;
+  }, []);
   const courtsForComplex = useMemo(
     () => courts.filter((c) => c.complex_id === complexId && (c.status === "active" || c.id === match?.court_id)),
     [courts, complexId, match?.court_id],
@@ -74,14 +86,20 @@ export function MatchForm({
         </Select>
       </Field>
 
-      <Field label="Fecha y hora" error={fe.starts_at_local} hint="Hora de Argentina">
-        <Input
-          name="starts_at_local"
-          type="datetime-local"
-          defaultValue={match ? utcISOToLocalArg(match.starts_at) : ""}
-          required
-        />
-      </Field>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Fecha" error={fe.starts_at_date} hint="Hora de Argentina">
+          <Input name="starts_at_date" type="date" defaultValue={defaultDate} required />
+        </Field>
+        <Field label="Hora" error={fe.starts_at_time}>
+          <Select name="starts_at_time" defaultValue={defaultTime || "20:00"} required>
+            {timeOptions.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </Select>
+        </Field>
+      </div>
 
       <div className="grid grid-cols-2 gap-3">
         <Field label="Duracion (min)" error={fe.duration_minutes}>

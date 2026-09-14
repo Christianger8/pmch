@@ -7,6 +7,7 @@ import { cn } from "@/lib/cn";
 const tabs = [
   { href: "/admin", label: "Panel" },
   { href: "/admin/matches", label: "Partidos" },
+  { href: "/admin/players", label: "Jugadores" },
   { href: "/admin/complexes", label: "Complejos" },
   { href: "/admin/courts", label: "Canchas" },
 ];

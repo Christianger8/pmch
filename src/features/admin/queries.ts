@@ -4,7 +4,19 @@ import type {
   Court,
   DashboardStats,
   MatchDetails,
+  Profile,
 } from "@/lib/supabase/database.types";
+
+export async function listPlayers(): Promise<Profile[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("role", "player")
+    .order("full_name", { ascending: true, nullsFirst: false });
+  if (error) throw error;
+  return (data ?? []) as Profile[];
+}
 
 export async function listComplexes(): Promise<Complex[]> {
   const supabase = await createClient();

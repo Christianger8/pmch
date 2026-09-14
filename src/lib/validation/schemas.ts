@@ -42,14 +42,22 @@ export type CourtInput = z.infer<typeof courtSchema>;
 export const matchSchema = z.object({
   complex_id: uuid,
   court_id: uuid,
-  // datetime-local sin zona: se interpreta como hora de Argentina en el server action
-  starts_at_local: z.string().min(10, "Elegi fecha y hora"),
+  // fecha y hora por separado (hora en pasos de 30 min); se combinan e
+  // interpretan como hora de Argentina en el server action
+  starts_at_date: z.string().min(8, "Elegi la fecha"),
+  starts_at_time: z.string().regex(/^\d{2}:\d{2}$/, "Elegi la hora"),
   duration_minutes: z.coerce.number().int().min(30).max(300).default(90),
   max_players: z.coerce.number().int().min(2).max(8).default(4),
   category: z.string().trim().max(40).optional().or(z.literal("")),
   comments: z.string().trim().max(500).optional().or(z.literal("")),
 });
 export type MatchInput = z.infer<typeof matchSchema>;
+
+export const playerSchema = z.object({
+  full_name: z.string().trim().min(2, "Ingresa el nombre").max(80),
+  phone_local: phoneSchema,
+});
+export type PlayerInput = z.infer<typeof playerSchema>;
 
 export const matchIdSchema = z.object({ match_id: uuid });
 export const removePlayerSchema = z.object({ match_id: uuid, user_id: uuid });

@@ -2,13 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/features/auth/session";
 import { localArgToUtcISO } from "@/lib/time";
+import { argMobileToE164 } from "@/lib/format";
 import {
   complexSchema,
   courtSchema,
   matchSchema,
+  playerSchema,
   removePlayerSchema,
 } from "@/lib/validation/schemas";
 import type { FormResult } from "./types";
@@ -20,6 +22,59 @@ function zodToFieldErrors(issues: readonly { path: PropertyKey[]; message: strin
     if (!out[key]) out[key] = i.message;
   }
   return out;
+}
+
+// ---------------------------------------------------------------------------
+// Jugadores (carga manual)
+// ---------------------------------------------------------------------------
+/**
+ * Crea un jugador directo en la base (auth.users + profiles), sin pasar por
+ * el login. Sirve para armar el padron de antemano: cuando ese celular
+ * entre por primera vez con WhatsApp/SMS, Supabase lo reconoce y lo engancha
+ * con este mismo perfil en vez de pedirle que se registre de nuevo.
+ */
+export async function createPlayer(_prev: FormResult, formData: FormData): Promise<FormResult> {
+  await requireAdmin();
+  const parsed = playerSchema.safeParse({
+    full_name: formData.get("full_name"),
+    phone_local: formData.get("phone_local"),
+  });
+  if (!parsed.success) return { fieldErrors: zodToFieldErrors(parsed.error.issues) };
+
+  const phone = argMobileToE164(parsed.data.phone_local);
+  const admin = createAdminClient();
+
+  const { data: created, error: createError } = await admin.auth.admin.createUser({
+    phone,
+    phone_confirm: true,
+  });
+
+  if (createError || !created.user) {
+    const msg = createError?.message ?? "";
+    if (msg.toLowerCase().includes("already") || msg.toLowerCase().includes("exists")) {
+      return { fieldErrors: { phone_local: "Ya hay un jugador con ese celular" } };
+    }
+    return { error: "No se pudo crear el jugador" };
+  }
+
+  const { error: updateError } = await admin
+    .from("profiles")
+    .update({ full_name: parsed.data.full_name, onboarded: true })
+    .eq("id", created.user.id);
+
+  if (updateError) return { error: "El jugador se creo, pero no se pudo guardar el nombre" };
+
+  revalidatePath("/admin/players");
+  return { ok: true };
+}
+
+export async function deletePlayer(id: string): Promise<FormResult> {
+  await requireAdmin();
+  const admin = createAdminClient();
+  const { error } = await admin.auth.admin.deleteUser(id);
+  if (error) return { error: "No se pudo eliminar el jugador" };
+  revalidatePath("/admin/players");
+  return { ok: true };
 }
 
 // ---------------------------------------------------------------------------
@@ -118,7 +173,8 @@ export async function saveMatch(id: string | null, _prev: FormResult, formData: 
   const parsed = matchSchema.safeParse({
     complex_id: formData.get("complex_id"),
     court_id: formData.get("court_id"),
-    starts_at_local: formData.get("starts_at_local"),
+    starts_at_date: formData.get("starts_at_date"),
+    starts_at_time: formData.get("starts_at_time"),
     duration_minutes: formData.get("duration_minutes"),
     max_players: formData.get("max_players"),
     category: formData.get("category") ?? "",
@@ -128,9 +184,9 @@ export async function saveMatch(id: string | null, _prev: FormResult, formData: 
 
   let startsAt: string;
   try {
-    startsAt = localArgToUtcISO(parsed.data.starts_at_local);
+    startsAt = localArgToUtcISO(`${parsed.data.starts_at_date}T${parsed.data.starts_at_time}`);
   } catch {
-    return { fieldErrors: { starts_at_local: "Fecha y hora invalidas" } };
+    return { fieldErrors: { starts_at_date: "Fecha y hora invalidas" } };
   }
 
   const supabase = await createClient();

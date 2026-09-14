@@ -523,6 +523,7 @@ export type Database = {
       };
       join_match: { Args: { target_match: string }; Returns: string };
       leave_match: { Args: { target_match: string }; Returns: undefined };
+      phone_is_registered: { Args: { check_phone: string }; Returns: boolean };
       recalc_match_status: {
         Args: { target_match: string };
         Returns: undefined;

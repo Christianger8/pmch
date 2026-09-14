@@ -1,48 +1,115 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import { useFormStatus } from "react-dom";
-import { requestOtp } from "@/features/auth/actions";
-import type { ActionState } from "@/features/auth/types";
+import { useState, useTransition } from "react";
+import { checkPhone, sendOtp } from "@/features/auth/actions";
 import type { OtpChannel } from "@/lib/validation/schemas";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
 
-function SubmitButton({ channel }: { channel: OtpChannel }) {
-  const { pending } = useFormStatus();
-  const label = channel === "whatsapp" ? "WhatsApp" : "SMS";
-  return (
-    <Button type="submit" size="lg" disabled={pending}>
-      {pending ? "Enviando codigo…" : `Enviar codigo por ${label}`}
-    </Button>
-  );
-}
-
 export function LoginForm({ next, defaultChannel }: { next: string; defaultChannel: OtpChannel }) {
-  const [state, action] = useActionState<ActionState, FormData>(requestOtp, {});
-  const [channel, setChannel] = useState<OtpChannel>(defaultChannel);
+  const [phoneInput, setPhoneInput] = useState("");
+  const [step, setStep] = useState<"phone" | "channel">("phone");
+  const [checkedPhone, setCheckedPhone] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  const handleContinue = () => {
+    setError(null);
+    startTransition(async () => {
+      const result = await checkPhone(phoneInput);
+      if (!result.ok || !result.phone) {
+        setError(result.error ?? "Ingresa un numero de celular valido");
+        return;
+      }
+      if (result.registered) {
+        // Ya esta cargado (por un admin o porque ya entro antes): mandamos
+        // el codigo directo por el canal de siempre, sin preguntar de nuevo.
+        const sendResult = await sendOtp(result.phone, defaultChannel, next);
+        if (sendResult?.error) setError(sendResult.error);
+        return;
+      }
+      setCheckedPhone(result.phone);
+      setStep("channel");
+    });
+  };
+
+  const handleSendNew = (channel: OtpChannel) => {
+    if (!checkedPhone) return;
+    setError(null);
+    startTransition(async () => {
+      const sendResult = await sendOtp(checkedPhone, channel, next);
+      if (sendResult?.error) setError(sendResult.error);
+    });
+  };
+
+  if (step === "channel" && checkedPhone) {
+    return (
+      <div className="space-y-4">
+        <div className="rounded-xl bg-neutral-100 p-3 text-sm dark:bg-neutral-800">
+          Es la primera vez que <span className="font-medium">{checkedPhone}</span> entra. ¿Como
+          preferis recibir tu codigo?
+        </div>
+        {error && <p className="text-sm text-red-600">{error}</p>}
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            size="lg"
+            disabled={pending}
+            onClick={() => handleSendNew("whatsapp")}
+          >
+            WhatsApp
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            size="lg"
+            disabled={pending}
+            onClick={() => handleSendNew("sms")}
+          >
+            SMS
+          </Button>
+        </div>
+        <button
+          type="button"
+          className="w-full text-center text-sm text-neutral-500 underline"
+          onClick={() => {
+            setStep("phone");
+            setCheckedPhone(null);
+            setError(null);
+          }}
+        >
+          Cambiar numero
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <form action={action} className="space-y-4">
-      <input type="hidden" name="next" value={next} />
-      <input type="hidden" name="channel" value={channel} />
-
-      <Field
-        label="Numero de celular"
-        error={state.error}
-        hint="Codigo de area + numero, sin el 0 ni el 15"
-      >
-        <div className="flex h-12 items-center rounded-xl border border-neutral-300 bg-white pl-3 pr-1 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-200 dark:border-neutral-700 dark:bg-neutral-900 dark:focus-within:ring-brand-900">
+    <div className="space-y-4">
+      <Field label="Numero de celular" error={error ?? undefined} hint="Codigo de area + numero, sin el 0 ni el 15">
+        <div
+          className={cn(
+            "flex h-12 items-center rounded-xl border border-neutral-300 bg-white pl-3 pr-1 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-200 dark:border-neutral-700 dark:bg-neutral-900 dark:focus-within:ring-brand-900",
+          )}
+        >
           <span className="shrink-0 select-none text-[15px] font-medium text-neutral-500 dark:text-neutral-400">
             +54 9
           </span>
           <input
-            name="phone"
             type="tel"
             inputMode="tel"
             autoComplete="tel"
             placeholder="11 2233 4455"
+            value={phoneInput}
+            onChange={(e) => setPhoneInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleContinue();
+              }
+            }}
             required
             autoFocus
             className="h-full w-full bg-transparent px-2 text-[15px] outline-none placeholder:text-neutral-400"
@@ -50,35 +117,13 @@ export function LoginForm({ next, defaultChannel }: { next: string; defaultChann
         </div>
       </Field>
 
-      <div>
-        <span className="mb-1.5 block text-sm font-medium text-neutral-700 dark:text-neutral-200">
-          Recibir el codigo por
-        </span>
-        <div className="grid grid-cols-2 gap-2">
-          {(["whatsapp", "sms"] as const).map((c) => (
-            <button
-              key={c}
-              type="button"
-              onClick={() => setChannel(c)}
-              aria-pressed={channel === c}
-              className={cn(
-                "h-11 rounded-xl border text-sm font-semibold transition-colors",
-                channel === c
-                  ? "border-brand-600 bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-200"
-                  : "border-neutral-300 text-neutral-600 dark:border-neutral-700 dark:text-neutral-300",
-              )}
-            >
-              {c === "whatsapp" ? "WhatsApp" : "SMS"}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <SubmitButton channel={channel} />
+      <Button type="button" size="lg" disabled={pending} onClick={handleContinue}>
+        {pending ? "Verificando…" : "Continuar"}
+      </Button>
 
       <p className="text-center text-xs text-neutral-400">
         Al continuar aceptas recibir un mensaje con un codigo de verificacion.
       </p>
-    </form>
+    </div>
   );
 }

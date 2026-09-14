@@ -7,32 +7,41 @@ import { argMobileToE164 } from "@/lib/format";
 import {
   emailSchema,
   onboardingSchema,
-  otpChannelSchema,
   otpSchema,
   phoneSchema,
   type OtpChannel,
 } from "@/lib/validation/schemas";
 import { env } from "@/lib/env";
-import type { ActionState } from "./types";
+import type { ActionState, PhoneCheckResult } from "./types";
 
-function resolveChannel(value: FormDataEntryValue | null): OtpChannel {
-  const parsed = otpChannelSchema.safeParse(value);
-  return parsed.success ? parsed.data : env.defaultOtpChannel;
-}
-
-/** Paso 1: enviar el codigo OTP por WhatsApp o SMS. */
-export async function requestOtp(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  const parsed = phoneSchema.safeParse(formData.get("phone"));
-  if (!parsed.success) return { error: "Ingresa un numero de celular valido" };
+/**
+ * Paso 1 del login: solo el celular. Si ya esta registrado (lo cargo un
+ * admin, o ya inicio sesion antes) el paso 2 manda el codigo directo por el
+ * canal por defecto. Si es nuevo, recien ahi se pregunta WhatsApp o SMS.
+ */
+export async function checkPhone(localNumber: string): Promise<PhoneCheckResult> {
+  const parsed = phoneSchema.safeParse(localNumber);
+  if (!parsed.success) return { ok: false, error: "Ingresa un numero de celular valido" };
 
   const phone = argMobileToE164(parsed.data);
-  const channel = resolveChannel(formData.get("channel"));
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("phone_is_registered", { check_phone: phone });
+
+  if (error) return { ok: false, error: "No pudimos verificar el numero. Reintenta." };
+  return { ok: true, phone, registered: Boolean(data) };
+}
+
+/** Paso 2: enviar el codigo OTP por WhatsApp o SMS al celular ya verificado en el paso 1. */
+export async function sendOtp(
+  phone: string,
+  channel: OtpChannel,
+  next: string,
+): Promise<ActionState> {
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithOtp({ phone, options: { channel } });
 
   if (error) return { error: traducirError(error.message) };
 
-  const next = (formData.get("next") as string) || "/";
   redirect(
     `/login/verify?phone=${encodeURIComponent(phone)}&next=${encodeURIComponent(next)}&channel=${channel}`,
   );

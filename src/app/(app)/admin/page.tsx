@@ -12,7 +12,7 @@ export default async function AdminDashboardPage() {
     <div className="space-y-4">
       <h1 className="text-xl font-bold">Panel</h1>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat label="Jugadores registrados" value={s.players} />
         <Stat label="Complejos activos" value={`${s.complexes_active}/${s.complexes}`} />
         <Stat label="Canchas" value={s.courts} />
