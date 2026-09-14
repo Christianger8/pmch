@@ -7,9 +7,12 @@ const dateFmt = new Intl.DateTimeFormat("es-AR", {
   timeZone: TZ,
 });
 
+// hour12 explicito: sin esto, algunos navegadores resuelven "es-AR" en
+// formato 12hs (am/pm) en vez de 24hs.
 const timeFmt = new Intl.DateTimeFormat("es-AR", {
   hour: "2-digit",
   minute: "2-digit",
+  hour12: false,
   timeZone: TZ,
 });
 
@@ -19,6 +22,7 @@ const shortFmt = new Intl.DateTimeFormat("es-AR", {
   month: "short",
   hour: "2-digit",
   minute: "2-digit",
+  hour12: false,
   timeZone: TZ,
 });
 
