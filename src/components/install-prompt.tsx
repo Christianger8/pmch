@@ -42,7 +42,7 @@ export function InstallPrompt() {
 
   return (
     <div className="fixed inset-x-3 bottom-24 z-40 mx-auto max-w-sm rounded-2xl border border-neutral-200 bg-white p-4 shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
-      <p className="text-sm font-semibold">Instala PadelMatch</p>
+      <p className="text-sm font-semibold">Instala Partidup</p>
       <p className="mt-1 text-xs text-neutral-500">
         Agregala a tu pantalla de inicio para entrar mas rapido.
       </p>

@@ -25,7 +25,7 @@ export default async function LoginPage({
             <path d="M3.5 9c4 0 7.5 3.5 7.5 9M20.5 9c-4 0-7.5 3.5-7.5 9" strokeLinecap="round" />
           </svg>
         </div>
-        <h1 className="text-2xl font-bold">PadelMatch</h1>
+        <h1 className="text-2xl font-bold">Partidup</h1>
         <p className="mt-1 text-sm text-neutral-500">
           Ingresa con tu celular. Te enviamos un codigo por WhatsApp o SMS.
         </p>

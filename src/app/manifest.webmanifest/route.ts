@@ -8,8 +8,8 @@ const BASE_PATH = "/padelmatch";
 
 export function GET() {
   const manifest = {
-    name: "PadelMatch",
-    short_name: "PadelMatch",
+    name: "Partidup",
+    short_name: "Partidup",
     description: "Organiza tus partidos de padel y completa los cuatro jugadores en segundos.",
     start_url: `${BASE_PATH}/`,
     scope: `${BASE_PATH}/`,

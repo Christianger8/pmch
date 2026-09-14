@@ -15,7 +15,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <div className="header-inner flex items-center justify-between px-4 py-3">
           <Link href="/" className="flex items-center gap-2 font-bold">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white">P</span>
-            PadelMatch
+            Partidup
           </Link>
           <div className="flex items-center gap-1">
             <ThemeToggle />

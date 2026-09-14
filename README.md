@@ -1,4 +1,4 @@
-# PadelMatch
+# Partidup
 
 WebApp (PWA) para organizar partidos de pádel: los administradores publican
 partidos y los jugadores se anotan hasta completar el cupo, todo desde el celular

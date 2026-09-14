@@ -49,11 +49,11 @@ export function buildMatchICS(match: MatchDetails): string {
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//PadelMatch//ES//",
+    "PRODID:-//Partidup//ES//",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     "BEGIN:VEVENT",
-    `UID:match-${match.id}@padelmatch`,
+    `UID:match-${match.id}@partidup`,
     `DTSTAMP:${toICSDate(now)}`,
     `DTSTART:${toICSDate(start)}`,
     `DTEND:${toICSDate(end)}`,

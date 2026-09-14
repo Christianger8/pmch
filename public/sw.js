@@ -1,4 +1,4 @@
-/* PadelMatch · Service Worker
+/* Partidup · Service Worker
  * Estrategia:
  *   - Navegaciones (documentos): network-first con fallback a /offline
  *   - Estaticos de Next (/_next/static): cache-first (inmutables)
@@ -101,10 +101,10 @@ self.addEventListener("push", (event) => {
   try {
     payload = event.data.json();
   } catch {
-    payload = { title: "PadelMatch", body: event.data.text() };
+    payload = { title: "Partidup", body: event.data.text() };
   }
   event.waitUntil(
-    self.registration.showNotification(payload.title || "PadelMatch", {
+    self.registration.showNotification(payload.title || "Partidup", {
       body: payload.body || "",
       icon: `${BASE_PATH}/icons/icon-192.png`,
       badge: `${BASE_PATH}/icons/icon-192.png`,

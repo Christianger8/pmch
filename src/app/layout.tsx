@@ -9,10 +9,10 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swa
 
 export const metadata: Metadata = {
   metadataBase: new URL(env.appUrl),
-  applicationName: "PadelMatch",
+  applicationName: "Partidup",
   title: {
-    default: "PadelMatch · Organiza tus partidos de padel",
-    template: "%s · PadelMatch",
+    default: "Partidup · Organiza tus partidos de padel",
+    template: "%s · Partidup",
   },
   description: "Publica partidos de padel y completa los cuatro jugadores en segundos.",
   // Next no antepone basePath a estos dos campos automaticamente.
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "PadelMatch",
+    title: "Partidup",
   },
   icons: {
     apple: "/padelmatch/icons/apple-touch-icon.png",
