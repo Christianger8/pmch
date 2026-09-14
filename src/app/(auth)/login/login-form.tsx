@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { checkPhone, sendOtp } from "@/features/auth/actions";
+import { checkPhone, loginRegisteredPlayer, sendOtp } from "@/features/auth/actions";
 import type { OtpChannel } from "@/lib/validation/schemas";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
@@ -23,10 +23,9 @@ export function LoginForm({ next, defaultChannel }: { next: string; defaultChann
         return;
       }
       if (result.registered) {
-        // Ya esta cargado (por un admin o porque ya entro antes): mandamos
-        // el codigo directo por el canal de siempre, sin preguntar de nuevo.
-        const sendResult = await sendOtp(result.phone, defaultChannel, next);
-        if (sendResult?.error) setError(sendResult.error);
+        // Ya esta cargado por un admin: entra directo, sin WhatsApp/SMS.
+        const loginResult = await loginRegisteredPlayer(result.phone, next);
+        if (loginResult?.error) setError(loginResult.error);
         return;
       }
       setCheckedPhone(result.phone);

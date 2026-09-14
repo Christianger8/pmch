@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { argMobileToE164 } from "@/lib/format";
+import { derivePlayerPassword } from "@/lib/player-auth";
 import {
   emailSchema,
   onboardingSchema,
@@ -29,6 +30,26 @@ export async function checkPhone(localNumber: string): Promise<PhoneCheckResult>
 
   if (error) return { ok: false, error: "No pudimos verificar el numero. Reintenta." };
   return { ok: true, phone, registered: Boolean(data) };
+}
+
+/**
+ * Login directo para un celular que un admin ya cargo como jugador (sin
+ * WhatsApp/SMS todavia). Ver src/lib/player-auth.ts para el porque y las
+ * implicancias de seguridad de este atajo temporal.
+ */
+export async function loginRegisteredPlayer(phone: string, next: string): Promise<ActionState> {
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithPassword({
+    phone,
+    password: derivePlayerPassword(phone),
+  });
+
+  if (error) {
+    return { error: "No pudimos ingresarte. Pedile a un administrador que revise tu numero." };
+  }
+
+  revalidatePath("/", "layout");
+  redirect(next);
 }
 
 /** Paso 2: enviar el codigo OTP por WhatsApp o SMS al celular ya verificado en el paso 1. */
@@ -167,5 +188,8 @@ function traducirError(message: string): string {
   if (m.includes("invalid") && m.includes("token")) return "El codigo es incorrecto o expiro";
   if (m.includes("rate limit") || m.includes("too many")) return "Demasiados intentos. Espera unos minutos.";
   if (m.includes("expired")) return "El codigo expiro. Pedi uno nuevo.";
+  if (m.includes("phone_provider_disabled") || m.includes("unsupported phone provider")) {
+    return "El ingreso por WhatsApp/SMS todavia no esta activado. Pedile a un administrador que te cargue como jugador.";
+  }
   return "No pudimos completar la operacion. Reintenta.";
 }

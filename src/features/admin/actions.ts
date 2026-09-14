@@ -6,6 +6,7 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/features/auth/session";
 import { localArgToUtcISO } from "@/lib/time";
 import { argMobileToE164 } from "@/lib/format";
+import { derivePlayerPassword } from "@/lib/player-auth";
 import {
   complexSchema,
   courtSchema,
@@ -47,6 +48,9 @@ export async function createPlayer(_prev: FormResult, formData: FormData): Promi
   const { data: created, error: createError } = await admin.auth.admin.createUser({
     phone,
     phone_confirm: true,
+    // Permite el login sin OTP mientras no hay WhatsApp/SMS conectado.
+    // Ver src/lib/player-auth.ts.
+    password: derivePlayerPassword(phone),
   });
 
   if (createError || !created.user) {

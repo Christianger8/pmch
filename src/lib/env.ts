@@ -38,3 +38,11 @@ export const env = {
 export function serviceRoleKey(): string {
   return required("SUPABASE_SERVICE_ROLE_KEY", process.env.SUPABASE_SERVICE_ROLE_KEY);
 }
+
+/**
+ * Secreto para el login sin OTP de jugadores pre-cargados por un admin
+ * (mientras no hay WhatsApp/SMS conectado). Ver src/lib/player-auth.ts.
+ */
+export function playerAutoLoginSecret(): string {
+  return required("PLAYER_AUTO_LOGIN_SECRET", process.env.PLAYER_AUTO_LOGIN_SECRET);
+}
