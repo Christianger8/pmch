@@ -3,8 +3,8 @@ import { NextResponse } from "next/server";
 // Ruta normal (no la convencion especial app/manifest.ts) a proposito: con
 // basePath configurado, Next arma el <link rel="manifest"> del archivo de
 // convencion IGNORANDO el prefijo que le pongamos a mano en layout.tsx.
-// Sirviendolo como una ruta comun, el link manual si respeta /padelmatch.
-const BASE_PATH = "/padelmatch";
+// Sirviendolo como una ruta comun, el link manual si respeta /partidup.
+const BASE_PATH = "/partidup";
 
 export function GET() {
   const manifest = {

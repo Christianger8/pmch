@@ -16,14 +16,14 @@ export const metadata: Metadata = {
   },
   description: "Publica partidos de padel y completa los cuatro jugadores en segundos.",
   // Next no antepone basePath a estos dos campos automaticamente.
-  manifest: "/padelmatch/manifest.webmanifest",
+  manifest: "/partidup/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "Partidup",
   },
   icons: {
-    apple: "/padelmatch/icons/apple-touch-icon.png",
+    apple: "/partidup/icons/apple-touch-icon.png",
   },
 };
 

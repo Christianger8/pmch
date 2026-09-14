@@ -6,9 +6,9 @@
  * No cachea llamadas a Supabase ni /api.
  */
 const VERSION = "v1";
-// La app vive bajo /padelmatch (next.config.mjs -> basePath). El service
+// La app vive bajo /partidup (next.config.mjs -> basePath). El service
 // worker no pasa por el router de Next, asi que las rutas van a mano.
-const BASE_PATH = "/padelmatch";
+const BASE_PATH = "/partidup";
 const STATIC_CACHE = `pm-static-${VERSION}`;
 const RUNTIME_CACHE = `pm-runtime-${VERSION}`;
 const OFFLINE_URL = `${BASE_PATH}/offline`;
