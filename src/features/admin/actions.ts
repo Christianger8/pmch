@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/features/auth/session";
 import { localArgToUtcISO } from "@/lib/time";
-import { argMobileToE164, toAuthPhone } from "@/lib/format";
+import { argMobileToE164, displayPhone, toAuthPhone } from "@/lib/format";
 import { derivePlayerPassword } from "@/lib/player-auth";
 import {
   complexSchema,
@@ -82,6 +82,27 @@ export async function deletePlayer(id: string): Promise<FormResult> {
   const { error } = await admin.auth.admin.deleteUser(id);
   if (error) return { error: "No se pudo eliminar el jugador" };
   revalidatePath("/admin/players");
+  return { ok: true };
+}
+
+/**
+ * Vuelve a calcular la contrasena de acceso directo (ver src/lib/player-auth.ts)
+ * para la cuenta que esta ejecutando la accion, usando el
+ * PLAYER_AUTO_LOGIN_SECRET que de verdad esta cargado en el servidor en
+ * este momento. Sirve para reparar el propio login por celular cuando esa
+ * contrasena se seteo alguna vez a mano (por SQL) con un secreto viejo o
+ * adivinado, o si el secreto se rota alguna vez.
+ */
+export async function resyncMyDirectLoginPassword(): Promise<FormResult> {
+  const user = await requireAdmin();
+  if (!user.phone) return { error: "Tu cuenta no tiene un celular cargado" };
+
+  const admin = createAdminClient();
+  const phone = displayPhone(user.phone); // con "+", igual que en el resto de la app
+  const { error } = await admin.auth.admin.updateUserById(user.id, {
+    password: derivePlayerPassword(phone),
+  });
+  if (error) return { error: "No se pudo actualizar la contrasena" };
   return { ok: true };
 }
 

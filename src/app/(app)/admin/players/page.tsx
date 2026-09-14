@@ -1,5 +1,5 @@
 import { listPlayers } from "@/features/admin/queries";
-import { deletePlayer } from "@/features/admin/actions";
+import { deletePlayer, resyncMyDirectLoginPassword } from "@/features/admin/actions";
 import { Card } from "@/components/ui/card";
 import { ConfirmButton } from "@/components/ui/confirm-button";
 import { PlayerForm } from "@/features/admin/components/player-form";
@@ -22,6 +22,26 @@ export default async function AdminPlayersPage() {
       <Card>
         <h2 className="mb-3 font-semibold">Agregar jugador</h2>
         <PlayerForm />
+      </Card>
+
+      <Card>
+        <h2 className="font-semibold">¿No podés entrar con tu propio celular?</h2>
+        <p className="mt-1 text-sm text-neutral-500">
+          Si probás el ingreso directo (sin código) con tu propio número y te
+          dice que revises el número, tocá este botón una vez: vuelve a
+          calcular tu contraseña de acceso directo con la configuración
+          actual del servidor.
+        </p>
+        <div className="mt-3">
+          <ConfirmButton
+            action={resyncMyDirectLoginPassword}
+            confirmText="¿Volver a calcular tu contraseña de acceso directo?"
+            successText="Listo, ya podés probar el ingreso directo de nuevo"
+            variant="secondary"
+          >
+            Sincronizar mi acceso directo
+          </ConfirmButton>
+        </div>
       </Card>
 
       <Card>
